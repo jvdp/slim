@@ -507,17 +507,20 @@ executeB lb = do
 executeE :: Event (Local t) a -> Deferred Execution (Event Shared a)
 executeE le = lift (e_run le)
 
-data StartComponent a = StartComponent (forall s. Start s (Component (Dynamic s) a))
+newtype StartComponent a = StartComponent { unStartComponent :: forall s. Start s (Component (Dynamic s) a) }
 
 newtype Start t a = Start { unStart :: Deferred Execution a } deriving (Functor, Applicative, Monad, MonadFix)
 
 executeStart :: Start t a -> Execution a
 executeStart = runDeferred . unStart
 
+executeStartComponent :: StartComponent a -> Execution (Component (Dynamic s) a)
+executeStartComponent = runDeferred . unStart . unStartComponent
+
 runStartRoot :: StartComponent a -> IO ([ElementAction], ElementId, DomEventInfo -> IO [ElementAction])
-runStartRoot (StartComponent sc) = do
+runStartRoot sc = do
   (mde, fire) <- newEvent
-  (comp, s@(reg, _, _), as) <- runRWST (executeStart sc) mde (Map.empty, 0, 0)
+  (comp, s@(reg, _, _), as) <- runRWST (executeStartComponent sc) mde (Map.empty, 0, 0)
   ref <- newIORef s
   let
     update dei = do
@@ -585,8 +588,7 @@ startE :: Event (Local t) a -> Start t (Event Shared a)
 startE e = Start (executeE e)
 
 track :: Eq k => Behavior (Local t) [k] -> (k -> StartComponent a) -> Behavior (Local t) [Component (Dynamic t) a]
-track b f = trackM b $ \k -> case f k of StartComponent c -> executeStart c
-
+track b f = trackM b (executeStartComponent . f)
 
 instance Show (EventRouter a b) where
   show _ = "<< EventRouter >>"
