@@ -1,14 +1,14 @@
 # slim
 
-TODO: Write description here
+Functional reactive user interface programming with Virtual DOM.
 
 ## Installation
 
-TODO: Write installation instructions here
+    cabal install slim
 
 ## Usage
 
-TODO: Write usage instructions here
+Coming soon.
 
 ## How to run tests
 
@@ -18,4 +18,4 @@ cabal configure --enable-tests && cabal build && cabal test
 
 ## Contributing
 
-TODO: Write contribution instructions here
+Make an issue or PR on github: https://github.com/jvdp/slim
